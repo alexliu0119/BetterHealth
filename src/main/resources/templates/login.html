@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康管理系統 - 登入</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            max-width: 900px;
+            width: 100%;
+            padding: 1rem;
+        }
+
+        .login-container, .register-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .divider {
+            border-left: 1px solid #ddd;
+            height: 100%;
+            margin: 0 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #166fe5;
+        }
+
+        .error-message {
+            color: #ff0000;
+            margin-top: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <h2 style="text-align: center; margin-bottom: 2rem;">健康管理系統登入</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)" method="POST">
+                <div class="form-group">
+                    <label for="username">用戶名：</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼：</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">登入</button>
+                <div id="errorMessage" class="error-message"></div>
+            </form>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="register-container">
+            <h2 style="text-align: center; margin-bottom: 2rem;">註冊新帳號</h2>
+           <form id="registerForm" onsubmit="handleRegister(event)" method="POST">
+                <div class="form-group">
+                    <label for="newUsername">用戶名：</label>
+                    <input type="text" id="newUsername" name="newUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">密碼：</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">確認密碼：</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <button type="submit">註冊</button>
+                <div id="registerError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+		async function handleRegister(event) {
+		    event.preventDefault();
+		    
+		    const password = document.getElementById('newPassword').value;
+		    const confirmPassword = document.getElementById('confirmPassword').value;
+		    
+			if (password !== confirmPassword) {
+			         alert('密碼不匹配！');  // 改用 alert 提示
+			         document.getElementById('registerError').textContent = '密碼不匹配';
+			         return;
+			     }
+			     
+		    
+		    const registerData = {
+		        username: document.getElementById('newUsername').value,
+		        password: password
+		    };
+
+		    try {
+		        const response = await fetch('/api/users/register', {
+		            method: 'POST',
+		            headers: {
+		                'Content-Type': 'application/json'
+		            },
+		            body: JSON.stringify(registerData)
+		        });
+
+		        const data = await response.json();
+		        
+				 if (response.ok) {
+				            alert('註冊成功！請登入');
+				            document.getElementById('registerForm').reset();
+				        } else {
+				            alert(data.message);  // 改用 alert 提示
+				            document.getElementById('registerError').textContent = data.message;
+				        }
+				    } catch (error) {
+				        console.error('註冊錯誤:', error);
+				        alert('註冊過程中發生錯誤');  // 改用 alert 提示
+				        document.getElementById('registerError').textContent = '註冊過程中發生錯誤';
+				    }
+				}
+				async function handleLogin(event) {
+				      event.preventDefault();
+				      
+				      const loginData = {
+				          username: document.getElementById('username').value,
+				          password: document.getElementById('password').value
+				      };
+
+				      try {
+				          const response = await fetch('/api/users/login', {
+				              method: 'POST',
+				              headers: {
+				                  'Content-Type': 'application/json'
+				              },
+				              body: JSON.stringify(loginData)
+				          });
+
+				          if (response.ok) {
+				              window.location.href = '/dashboard';  // 登入成功後轉向儀表板頁面
+				          } else {
+				              const data = await response.json();
+				              alert('登入失敗：帳號或密碼錯誤');  // 顯示錯誤提示
+				              document.getElementById('errorMessage').textContent = '帳號或密碼錯誤';
+				          }
+				      } catch (error) {
+				          console.error('登入錯誤:', error);
+				          alert('登入過程中發生錯誤');  // 顯示錯誤提示
+				          document.getElementById('errorMessage').textContent = '登入過程中發生錯誤';
+				      }
+				  }
+		</script>
+</body>
+</html>

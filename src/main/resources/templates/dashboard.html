@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>健康管理系統 - 儀表板</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 使用通用導航欄 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">健康管理系統</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">首頁</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">個人資料</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/daily-record">每日紀錄</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/activity-sleep">運動與睡眠</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/health-score">健康評分</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <form th:action="@{/logout}" method="post">
+                            <button class="btn btn-outline-light" type="submit">登出</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>歡迎回來！第一次登入的用戶請到左上角個人資料輸入資料</h2>
+        <div class="row mt-4">
+            <!-- 這裡可以添加儀表板的內容 -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

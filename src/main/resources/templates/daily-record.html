@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>每日紀錄</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 800px; margin-top: 50px; }
+		.progress-bar {
+		        display: flex;
+		        align-items: center;     /* 垂直置中 */
+		        justify-content: center; /* 水平置中 */
+		        font-size: 14px;        /* 調整字體大小 */
+		        font-weight: bold;      /* 加粗字體 */
+		        color: white;           /* 文字顏色 */
+		        transition: width 0.3s ease;
+		    }
+        .progress-fill { height: 100%; background-color: #4CAF50; transition: width 0.3s ease; }
+        .water-progress { background-color: #2196F3; }
+        .search-results { 
+            max-height: 200px; 
+            overflow-y: auto; 
+            border: 1px solid #ddd; 
+            margin-top: 5px; 
+            border-radius: 5px; 
+        }
+        .food-item { 
+            padding: 10px; 
+            cursor: pointer; 
+            border-bottom: 1px solid #eee; 
+        }
+        .food-item:hover { 
+            background-color: #f5f5f5; 
+        }
+        .section { 
+            background-color: #fff; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            margin-bottom: 20px; 
+        }
+        .loading { display: none; }
+        .nutrition-info { 
+            margin-top: 10px; 
+            padding: 10px; 
+            background-color: #f8f9fa; 
+            border-radius: 5px; 
+        }
+    </style>
+	<script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <input type="hidden" id="userId" th:value="${user.userId}" />
+
+        <!-- 導航欄 -->
+        <ul class="nav nav-pills mb-4">
+			<li class="nav-item">
+			               <a class="nav-link" href="/dashboard">首頁</a>
+            <li class="nav-item">
+                <a class="nav-link active" href="/daily-record">每日紀錄</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/activity-sleep">運動與睡眠</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/health-score">健康評分</a>
+            </li>
+        </ul>
+
+        <!-- 每日進度摘要 - 移到最上方 -->
+        <div class="section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>每日摘要</h4>
+                <button onclick="resetDailyRecord()" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-redo"></i> 重置今日紀錄
+                </button>
+            </div>
+
+            <!-- 卡路里進度 -->
+			<div class="mb-3">
+			       <label>卡路里攝入進度</label>
+			       <div class="progress">
+			           <div id="calorieProgress" class="progress-bar bg-success" role="progressbar" style="width: 0%">
+			               0/0 kcal
+			           </div>
+			       </div>
+			       <small class="text-muted">目標熱量: <span id="calorieTarget">0</span> kcal</small>
+			   </div>
+
+            <!-- 飲水進度 -->
+			 <div class="mb-3">
+			        <label>飲水進度</label>
+			        <div class="progress">
+			            <div id="waterProgress" class="progress-bar bg-info" role="progressbar" style="width: 0%">
+			                0/0 ml
+			            </div>
+			        </div>
+			        <small class="text-muted">目標飲水量: <span id="waterTarget">0</span> ml</small>
+			    </div>
+			</div>
+
+        <!-- 飲水紀錄 -->
+        <div class="section">
+            <h2>飲水紀錄</h2>
+            <div class="water-tracking">
+                <input type="number" id="waterAmount" placeholder="輸入飲水量(ml)" class="form-control mb-2">
+                <button onclick="recordWater()" class="btn btn-primary">記錄飲水</button>
+            </div>
+            <div id="waterSummary" class="nutrition-info"></div>
+        </div>
+
+        <!-- 食物紀錄 -->
+        <div class="section">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>食物紀錄</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="mb-3">
+                            <input type="text" id="foodSearch" class="form-control" placeholder="搜尋食物..." />
+                            <ul id="searchResults" class="list-group mt-2"></ul>
+                        </div>
+                        <div id="selectedFoodInfo"></div>
+                        <div id="nutritionInfo" style="display: none;">
+                            <h6>營養資訊 (每100g)</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <p>熱量: <span id="calories">0</span> kcal</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p>蛋白質: <span id="protein">0</span> g</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p>脂肪: <span id="fat">0</span> g</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p>碳水化合物: <span id="carbs">0</span> g</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>份量 (克)</label>
+                                <input type="number" id="portionSize" class="form-control" value="100" min="1">
+                            </div>
+
+                            <div class="mt-3">
+                                <h6>實際營養值</h6>
+                                <div id="actualNutrition"></div>
+                            </div>
+
+                            <button class="btn btn-primary mt-3" onclick="recordFood()">記錄食物</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+		<!-- 添加 Modal 到 HTML 中 -->
+		<div class="modal fade" id="selectedFoodModal" tabindex="-1" aria-labelledby="selectedFoodModalLabel" aria-hidden="true">
+		    <div class="modal-dialog">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title" id="selectedFoodModalLabel">已選擇的食物</h5>
+		                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		            </div>
+		            <div class="modal-body" id="selectedFoodModalBody">
+		                <!-- 這裡會由 JavaScript 填充內容 -->
+		            </div>
+		            <div class="modal-footer">
+		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+		                <button type="button" class="btn btn-primary" onclick="recordFoodAndCloseModal()">確認記錄</button>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+
+		<!-- 確保引入 Bootstrap JS -->
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+
+    <!-- 引入 JS 文件 -->
+    <script src="/static/JS/common.js"></script>
+    <script src="/static/JS/calorieTracker.js"></script>
+
+	
+</body>
+</html>
